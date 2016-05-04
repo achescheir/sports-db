@@ -1,5 +1,8 @@
 # sports-db
 
+First run load_data.py to load information from the csv into the database
+
+
 ### Plan
 * connect to test-db
 * create table
@@ -9,4 +12,4 @@
 * context management??
 
 ### Testing plan
-1. 
+1.
