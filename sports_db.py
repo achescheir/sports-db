@@ -28,6 +28,26 @@ def find_yard_range(cur, min_yards, max_yards):
     cur.execute("select * from nebraska where scr_yds between {} and {}".format(min_yards, max_yards))
     return cur.fetchall()
 
+def add_player(cur, name=None):
+    to_add = []
+    for col in cur.description:
+        if col.name == 'name' and name is not None:
+            to_add.append(name)
+            continue
+        elif col.name == 'id':
+            continue
+        elif col.name.endswith("avg"):
+            avg = float(to_add[-1]) / float(to_add[-2])
+            to_add.append(avg)
+        elif col.name.startswith("scr"):
+            scr = sum([int(to_add[-4]),int(to_add[-8])])
+            to_add.append(scr)
+        else:
+            to_add.append(input(col.name + "? "))
+    sql_command = "INSERT INTO nebraska VALUES({}, '{}', {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {})"
+    cur.execute(sql_command.format(*[0 if x == "" else x for x in to_add]))
+
+
 def main():
     with psycopg2.connect('dbname=test user=alexchescheir host=/tmp') as conn:
         with conn.cursor() as cur:
@@ -37,6 +57,9 @@ def main():
                 records = find_name(cur, name)
                 if len(records) == 0:
                     print("{} is not in the database.".format(name))
+                    will_add = input("Would you like to add him? ")
+                    if len(will_add) == 0 or will_add.lower()[0] != 'n':
+                        add_player(cur, name)
                 else:
                     for record in records:
                         print(record)
@@ -47,6 +70,9 @@ def main():
                     records = find_min_yards(cur, min_yards)
                     if len(records) == 0:
                         print("No one had more than {} yards.".format(min_yards))
+                        will_add = input("Would you like to add a player? ")
+                        if len(will_add) == 0 or will_add.lower()[0] != 'n':
+                            add_player(cur)
                     else:
                         print('{} players had more than {} yards.'.format(len(records),min_yards))
                         max_yards = max([x[11] for x in records])
@@ -57,6 +83,9 @@ def main():
                         records = find_yard_range(cur, min_yards, max_yards)
                         if len(records) == 0:
                             print("No one had between {} and {} yards".format(min_yards, max_yards))
+                            will_add = input("Would you like to add a player? ")
+                            if len(will_add) == 0 or will_add.lower()[0] != 'n':
+                                add_player(cur)
                     if len(records) > 0:
                         for record in records:
                             print(record)
